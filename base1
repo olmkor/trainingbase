@@ -1,0 +1,302 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_LEN 50
+
+
+void addingString(char str[][MAX_LEN], int count, int group_pos) {
+	char buffer[MAX_LEN];
+
+	if (fgets(buffer, MAX_LEN, stdin)) {
+		buffer[strcspn(buffer, "\n")] = '\0';
+
+		int pos = count * 3 + group_pos;
+		if (pos < 100) {
+			strcpy_s(str[pos], MAX_LEN, buffer);
+		}
+	}
+}
+
+int deleteString(char str[][MAX_LEN], int count, int index) {
+	for (int i = index*3; i < (count - 1) * 3; i++) {
+		strcpy_s(str[i],MAX_LEN, str[i + 3]);  
+	}
+	int last = (count - 1) * 3;
+	for (int i = 0; i < 3; i++) {
+		str[last + i][0] = '\0';
+	}
+	count--;
+	return count;
+}
+void changingString(char str[][MAX_LEN], int numline, int numstolb) {
+	char buffer[MAX_LEN];
+
+	if (fgets(buffer, MAX_LEN, stdin)) {
+		buffer[strcspn(buffer, "\n")] = '\0';
+
+		int pos = numline*3 + numstolb;
+	strcpy_s(str[pos], MAX_LEN, buffer);
+	
+	}
+}
+void swap_strings(char str[][MAX_LEN], int i, int j) {
+	char temp[MAX_LEN];
+	strcpy_s(temp, MAX_LEN, str[i]); 
+	strcpy_s(str[i], MAX_LEN, str[j]);
+	strcpy_s(str[j], MAX_LEN, temp);
+}
+
+int Loadfrom_file(char str[][MAX_LEN]) {
+	FILE* streamF = NULL;
+	char fileName[] = "filminfo";
+	int amountStrings = 0;
+	int index = 0;
+fopen_s(&streamF, fileName, "r");
+
+	char temp[MAX_LEN];
+	while (fgets(temp, sizeof(temp), streamF)) {
+		strcpy_s(str[index], MAX_LEN, temp);
+		index++;
+
+		if (index % 3 == 0) {
+			amountStrings++;
+		}
+	}
+	fclose(streamF);
+	return amountStrings;
+}
+
+void printData(char str[][MAX_LEN], int amountStrings) {
+	int Count = 0;
+	for (int i = 0; i < amountStrings; i++) {
+		int base = i * 3;
+
+		if (strlen(str[base]) > 0) {
+			Count++;
+				printf("%s%s%s\n",
+				str[base], str[base + 1], str[base + 2]);
+		}
+	}
+	printf("Total: %d serials\n\n", Count);
+}
+
+void saveToFile(char str[][MAX_LEN], int amountStrings) {
+	FILE* streamF = NULL;
+	char fileName[] = "filminfo";
+	if (fopen_s(&streamF, fileName, "w") == 0 && streamF != NULL) {
+		for (int i = 0; i < amountStrings * 3; i++) {
+			if (strlen(str[i]) > 0) {
+				fprintf(streamF, "%s\n", str[i]);
+			}
+		}
+		fclose(streamF);
+	}
+}
+
+int main()
+{
+	char str[MAX_LEN * 3][MAX_LEN];
+	int amountStrings = Loadfrom_file(str);
+	printData(str, amountStrings);
+
+
+	printf("Here is a data base with information about serials: their Name, Amount of series, The country, sooo...\npress 0 to start\n");
+	int start;
+	scanf_s("%d", &start);
+	while (start == 0) 
+	{
+		printf("what do you want to do with a file: press\n 1 - to read all information,\n 2 - to change,\n 3 - to delete,\n 4 - to add,\n 5 - to search sth,\n 6 - to sort,\n");
+		int choice;
+		scanf_s("%d", &choice);
+		if (choice == 1) //read
+		{
+			printData(str, amountStrings);
+		}
+
+		if (choice == 4) //add
+		{
+			printf("Enter Name:\n"); getchar();
+			addingString(str, amountStrings, 0);
+			printf("Enter Amount of series:\n");
+			addingString(str, amountStrings, 1);
+			printf("Enter country:\n");
+			addingString(str, amountStrings, 2);
+			amountStrings++;
+			saveToFile(str, amountStrings);
+			printf("Adding has done succesfully!\n");
+
+		}
+
+		if (choice == 2) //change
+		{
+			printData(str, amountStrings);
+			printf("Enter the number of string you wanna change:\n");
+			int numStr;
+			scanf_s("%d", &numStr);
+			numStr -= 1;
+			printf("What do you want to change particularly: 1-Name, 2-Amount of series, 3-Country\n");
+			int z;
+			scanf_s("%d", &z); printf("Enter new info:\n");
+			getchar();
+			if (z == 1 || z == 2)
+				changingString(str, numStr, z - 1);
+			else if (z == 3)
+				changingString(str, numStr, z - 1);
+			saveToFile(str, amountStrings);
+			printf("Changing has done succesfully!\n");
+
+		}
+		if (choice == 3) //delete
+		{
+			for (int i = 0; i < amountStrings * 3; i++)
+				printf("%s", str[i]);
+			printf("Enter the number of string you wanna delete:");
+			int numStr;
+			scanf_s("%d", &numStr);
+			numStr -= 1;
+			amountStrings = deleteString(str, amountStrings, numStr);
+			saveToFile(str, amountStrings);
+
+		}
+
+		if (choice == 5) //search
+		{
+			printf("Search by: 1-Name, 2-Amount of series, 3-Country\n");
+			int r;
+			scanf_s("%d", &r);
+			if (r == 1) //by name
+			{
+				printf("Enter the name of particular serial:\n");
+				getchar();
+				char buffer[MAX_LEN];
+				if (fgets(buffer, MAX_LEN, stdin)) {
+					buffer[strcspn(buffer, "\n")] = '\0';
+				}
+				for (int i = 0; i < amountStrings * 3; i += 3)
+				{
+					if (strcmp(buffer, str[i]) == 0) {
+						printf("%s%s%s\n", str[i], str[i + 1], str[i + 2]);
+					}
+
+					else {
+						printf("Nothing found!\n"); break;
+					}
+				}
+			}
+			if (r == 2) //by series
+			{
+				printf("Enter min and max amount of series you want to search for:\n");
+				int minser; int maxser;
+				scanf_s("%d", &minser); scanf_s("%d", &maxser);
+				for (int i = 1; i < amountStrings * 3; i += 3) {
+					int num = atoi(str[i]);
+					if (num >= minser && num <= maxser) {
+						printf("%s%s%s", str[i - 1], str[i], str[i + 1]);
+					}
+					else {
+						printf("Nothing found!\n"); break;
+					}
+				}
+
+
+			}
+			if (r == 3) //by country
+			{
+				printf("Enter the name of particular country:\n");
+				getchar();
+				char buffer[MAX_LEN];
+				if (fgets(buffer, MAX_LEN, stdin)) {
+					buffer[strcspn(buffer, "\n")] = '\0';
+				}
+				for (int i = 2; i < amountStrings * 3; i += 3)
+				{
+					if (strcmp(buffer, str[i]) == 0)
+					{
+						printf("%s%s%s\n", str[i - 2], str[i - 1], str[i]);
+					}
+					else {
+						printf("Nothing found!\n"); break;
+					}
+				}
+			}
+		}
+			if (choice == 6) //sort
+
+			{
+				int y;
+				printf("do you want to sort for: 1-Name, 2-Amount of series, 3-Country\n");
+				scanf_s("%d", &y);
+				if (y == 1) //by name
+				{
+					for (int j = 0; j < amountStrings * 3 - 1; j++)
+					{
+						for (int i = 0; i < amountStrings * 3 - 3; i += 3)
+						{
+
+							if (strcmp(str[i], str[i + 3]) > 0)
+							{	
+								swap_strings(str, i, i + 3);
+								swap_strings(str, i + 1, i + 4);
+								swap_strings(str, i + 2, i + 5);
+							}
+						}
+					}
+				}
+				else if (y == 2) //by series
+				{
+					for (int j = 0; j < amountStrings * 3 - 1; j++)
+					{
+						for (int i = 1; i < amountStrings * 3 - 3; i += 3)
+						{
+
+							if (strlen(str[i]) > 0 && strlen(str[i + 3]) > 0)
+							{
+
+								int num1 = atoi(str[i]);
+								int num2 = atoi(str[i + 3]);
+
+								if (num1 > num2)
+								{
+									swap_strings(str, i - 1, i + 2);
+									swap_strings(str, i + 1, i + 4);
+									swap_strings(str, i, i + 3);
+								}
+							}
+						}
+					}
+
+				}
+				else if (y == 3) //by country
+				{
+					for (int j = 0; j < amountStrings * 3 - 1; j++)
+					{
+						for (int i = 2; i < amountStrings * 3 - 3; i += 3)
+						{
+
+							if (strcmp(str[i], str[i + 3]) > 0)
+							{
+								swap_strings(str, i - 2, i + 1);
+								swap_strings(str, i - 1, i + 2);
+								swap_strings(str, i, i + 3);
+							}
+						}
+					}
+				}
+
+				FILE* streamF = NULL;
+				char fileName[] = "filminfo";
+				fopen_s(&streamF, fileName, "w");
+				if (streamF != NULL)
+				{
+					for (int i = 0; i < amountStrings * 3; i++)
+						if (strlen(str[i]) > 0)
+							fprintf(streamF, "%s", str[i]);
+				}
+				fclose(streamF);
+				printf("Sorting has done succesfully!\n");
+			}
+			printf("if you want to continue working with a file press 0, if no press any other count\n");
+			scanf_s("%d", &start);
+		}
+	}
